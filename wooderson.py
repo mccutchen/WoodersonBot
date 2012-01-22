@@ -15,8 +15,7 @@ queries = [
      "It'd be a lot cooler if you did"),
 
     ('"high school girls"',
-     ("That's what I love about these high school girls, man. I get older, "
-      "they stay the same age.")),
+     "High school girls, man. I get older, they stay the same age."),
     ]
 
 # Where is Wooderson tweeting from? This is the latitude/longitude for the
