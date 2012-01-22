@@ -1,0 +1,4 @@
+cron:
+- description: alright alright alright
+  url: /cron/socialize
+  schedule: every 1 hours
