@@ -78,7 +78,7 @@ def socialize():
         logging.info('Searching for %r since %r', query, last_id)
         args = {
             'q': query,
-            'result_type': 'popular',
+            'result_type': 'mixed',
             'include_entities': False,
             }
         if last_id is not None:
