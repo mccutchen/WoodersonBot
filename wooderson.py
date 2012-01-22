@@ -17,6 +17,12 @@ queries = [
       "they stay the same age.")),
     ]
 
+# Where is Wooderson tweeting from? This is the latitude/longitude for the
+# shopping center where they filmed the Emporium scenes:
+# http://www.flickr.com/photos/jhwells/4008519023/
+reply_lat = 30.334455
+reply_lon = -97.721737
+reply_place_id = 'c3f37afa9efcf94b'
 
 def get_api():
     auth = tweepy.OAuthHandler(secrets.consumer_key, secrets.consumer_secret)
@@ -34,7 +40,9 @@ def send_reply(user_id, tweet_id, tweet, reply):
     try:
         api = get_api()
         status = api.update_status(
-            status=reply, in_reply_to_status_id=tweet_id)
+            status=reply, in_reply_to_status_id=tweet_id,
+            lat=reply_lat, lon=reply_lon, place_id=reply_place_id,
+            display_coordinates=True)
     except Exception, e:
         logging.exception('Error updating status: %s', e)
     else:
