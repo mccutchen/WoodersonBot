@@ -11,13 +11,14 @@ builtins:
 - remote_api: on
 
 handlers:
-- url: /favicon\.ico
-  static_files: favicon.ico
-  upload: favicon\.ico
+- url: /(favicon\.ico|robots\.txt)
+  static_files: static/$1
+  upload: static/$1
+
+- url: /
+  static_files: static/index.html
+  upload: static/index.html
 
 - url: /cron/.*
-  script: main.private_app
+  script: main.app
   login: admin
-
-- url: .*
-  script: main.public_app
