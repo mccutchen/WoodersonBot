@@ -1,9 +1,11 @@
 import logging
+import re
+
 from google.appengine.api import memcache
 from google.appengine.ext import db
 from google.appengine.ext import deferred
-
 from ext import tweepy
+
 from models import Reply
 import secrets
 
@@ -55,6 +57,20 @@ def send_reply(user_id, tweet_id, tweet, reply):
             reply=reply,
             reply_id=status.id).put()
 
+def should_reply(tweet):
+    """Determines whether Wooderson should reply to the given tweet. For now,
+    he just ignores old-style RTs.
+    """
+    return re.search(r'\bRT\b', tweet) is None
+
+def make_reply(user, tweet, base_reply):
+    """Builds Wooderson's reply to the given tweet by the given user, based on
+    the given "base" reply text. Right now, just prepend the user's Twitter
+    handle to the base reply. Potential improvements: Reply-all if the tweet
+    is itself a reply.
+    """
+    return '@%s %s' % (user, base_reply)
+
 def socialize():
     api = get_api()
     for query, response in queries:
@@ -79,13 +95,17 @@ def socialize():
                 continue
 
             for result in results:
-                reply = '@%s %s' % (result.from_user, response)
-                deferred.defer(
-                    send_reply,
-                    user_id=result.from_user_id,
-                    tweet_id=result.id,
-                    tweet=result.text,
-                    reply=reply)
+                if should_reply(result.text):
+                    reply = make_reply(
+                        result.from_user, result.text, response)
+                    deferred.defer(
+                        send_reply,
+                        user_id=result.from_user_id,
+                        tweet_id=result.id,
+                        tweet=result.text,
+                        reply=reply)
+                else:
+                    logging.warn('Not replying to: %s', result.text)
 
             logging.info('Recording last ID for %r: %r', query, results[0].id)
             memcache.set(query, results[0].id)
