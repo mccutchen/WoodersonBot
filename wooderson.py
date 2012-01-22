@@ -19,6 +19,20 @@ queries = [
      "High school girls, man. I get older, they stay the same age."),
     ]
 
+soliloquies = [
+    'Alright alright alright',
+
+    ("You ought to ditch the two geeks you're in the car with now and get in "
+     "with us. But that's all right, we'll worry about that later."),
+
+    ("Let me tell you this, the older you get the more rules they're gonna "
+     "try to get you to follow. You just gotta keep livin' man, L-I-V-I-N."),
+
+    "Say, man, you got a joint?",
+
+    "I love them redheads!",
+    ]
+
 # Where is Wooderson tweeting from? This is the latitude/longitude for the
 # shopping center where they filmed the Emporium scenes:
 # http://www.flickr.com/photos/jhwells/4008519023/
@@ -31,6 +45,18 @@ def get_api():
     auth.set_access_token(secrets.access_token, secrets.access_token_secret)
     return tweepy.API(auth)
 
+def update_status(status, **kwargs):
+    api = get_api()
+    args = {
+        'status': status,
+        'lat': reply_lat,
+        'lon': reply_lon,
+        'place_id': reply_place_id,
+        'display_coordinates': True,
+        }
+    args.update(kwargs)
+    return api.update_status(**args)
+
 def send_reply(user_id, tweet_id, tweet, reply):
     existing_reply = Reply.get_by_id(tweet_id)
     if existing_reply:
@@ -40,11 +66,7 @@ def send_reply(user_id, tweet_id, tweet, reply):
     logging.info('Tweet: %s', tweet)
     logging.info('Reply: %s', reply)
     try:
-        api = get_api()
-        status = api.update_status(
-            status=reply, in_reply_to_status_id=tweet_id,
-            lat=reply_lat, lon=reply_lon, place_id=reply_place_id,
-            display_coordinates=True)
+        status = update_status(reply, in_reply_to_status_id=tweet_id)
     except Exception, e:
         logging.exception('Error updating status: %s', e)
     else:
@@ -75,8 +97,6 @@ def make_reply(user, tweet, base_reply):
         return None
 
 def socialize():
-    api = get_api()
-
     # We'll gather pending replies here so that we can shuffle them before
     # queuing them up for execution.
     reply_args = []
@@ -93,6 +113,7 @@ def socialize():
             args['since_id'] = last_id
 
         try:
+            api = get_api()
             results = api.search(**args)
         except Exception, e:
             logging.exception('Error searching with params %r: %s', args, e)
@@ -121,3 +142,18 @@ def socialize():
     random.shuffle(reply_args)
     for args in reply_args:
         deferred.defer(send_reply, **args)
+
+def soliloquize():
+    key = 'last_soliloquy'
+    last_soliloquy = memcache.get(key)
+    next_soliloquy = random.choice(soliloquies)
+    while last_soliloquy and next_soliloquy == last_soliloquy:
+        next_soliloquy = random.choice(soliloquies)
+    logging.info('Soliloquizing: %s', next_soliloquy)
+    try:
+        status = update_status(next_soliloquy)
+    except Exception, e:
+        logging.exception('Error updating status: %s', e)
+    else:
+        logging.info('Updated status: %s (%s)', next_soliloquy, status.id)
+        memcache.set(key, next_soliloquy)
