@@ -1,4 +1,5 @@
 import logging
+import random
 import re
 
 from google.appengine.api import memcache
@@ -56,7 +57,7 @@ def send_reply(user_id, tweet_id, tweet, reply):
             reply=reply,
             reply_id=status.id).put()
 
-def should_reply(tweet):
+def should_reply(user, tweet):
     """Determines whether Wooderson should reply to the given tweet. For now,
     he just ignores old-style RTs.
     """
@@ -68,10 +69,18 @@ def make_reply(user, tweet, base_reply):
     handle to the base reply. Potential improvements: Reply-all if the tweet
     is itself a reply.
     """
-    return '@%s %s' % (user, base_reply)
+    if should_reply(user, tweet):
+        return '@%s %s' % (user, base_reply)
+    else:
+        return None
 
 def socialize():
     api = get_api()
+
+    # We'll gather pending replies here so that we can shuffle them before
+    # queuing them up for execution.
+    reply_args = []
+
     for query, response in queries:
         last_id = memcache.get(query)
         logging.info('Searching for %r since %r', query, last_id)
@@ -94,17 +103,21 @@ def socialize():
                 continue
 
             for result in results:
-                if should_reply(result.text):
-                    reply = make_reply(
-                        result.from_user, result.text, response)
-                    deferred.defer(
-                        send_reply,
-                        user_id=result.from_user_id,
-                        tweet_id=result.id,
-                        tweet=result.text,
-                        reply=reply)
+                reply = make_reply(result.from_user, result.text, response)
+                if reply:
+                    args = {
+                        'user_id': result.from_user_id,
+                        'tweet_id': result.id,
+                        'tweet': result.text,
+                        'reply': reply,
+                        }
+                    reply_args.append(args)
                 else:
                     logging.warn('Not replying to: %s', result.text)
 
             logging.info('Recording last ID for %r: %r', query, results[0].id)
             memcache.set(query, results[0].id)
+
+    random.shuffle(reply_args)
+    for args in reply_args:
+        deferred.defer(send_reply, **args)
