@@ -80,10 +80,12 @@ def send_reply(user_id, tweet_id, tweet, reply):
             reply_id=status.id).put()
 
 def should_reply(user, tweet):
-    """Determines whether Wooderson should reply to the given tweet. For now,
-    he just ignores old-style RTs.
-    """
-    return re.search(r'\bRT\b', tweet) is None
+    """Determines whether Wooderson should reply to the given tweet."""
+    patterns = (
+        r'\bRT\b', # Skip old-style RTs
+        r'^@\w+\b', # Skip @-replies
+        )
+    return not any(re.search(pattern, tweet) for pattern in patterns)
 
 def make_reply(user, tweet, base_reply):
     """Builds Wooderson's reply to the given tweet by the given user, based on
