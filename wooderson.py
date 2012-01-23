@@ -12,7 +12,7 @@ import secrets
 
 
 queries = [
-    ('"I didn\'t" OR "I don\'t"',
+    ('("I didn\'t have" OR "I don\'t have") -"have to"',
      "It'd be a lot cooler if you did"),
 
     ('"high school girls"',
