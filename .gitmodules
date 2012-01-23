@@ -1,0 +1,3 @@
+[submodule "ext/gaefab"]
+	path = ext/gaefab
+	url = git@github.com:mccutchen/gaefab.git
