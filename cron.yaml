@@ -2,7 +2,3 @@ cron:
 - description: conversate
   url: /cron/socialize
   schedule: every 1 hours
-
-- description: ramble
-  url: /cron/soliloquize
-  schedule: every 9 hours

@@ -1,3 +1,4 @@
+import datetime
 import logging
 import random
 import re
@@ -141,9 +142,16 @@ def socialize():
             logging.info('Recording last ID for %r: %r', query, results[0].id)
             memcache.set(query, results[0].id)
 
-    random.shuffle(reply_args)
-    for args in reply_args:
-        deferred.defer(send_reply, **args)
+    if reply_args:
+        logging.info('Scheduling %d replies', len(reply_args))
+        random.shuffle(reply_args)
+        for args in reply_args:
+            deferred.defer(send_reply, **args)
+    else:
+        logging.info('Nothing to reply to')
+        if datetime.datetime.utcnow().hour % 2 == 0:
+            logging.info('Soliloquizing...')
+            soliloquize()
 
 def soliloquize():
     key = 'last_soliloquy'
