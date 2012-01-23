@@ -237,10 +237,10 @@ Usage:
     else:
         try:
             ipython_shell()
-        except ImportError:
+        except:
             try:
                 bpython_shell()
-            except ImportError:
+            except:
                 plain_shell()
 
 
