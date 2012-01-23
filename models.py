@@ -6,9 +6,9 @@ class Reply(db.Model):
     be the same as its tweet_id.
     """
     tweet_id = db.IntegerProperty()
-    tweet = db.StringProperty()
+    tweet = db.StringProperty(multiline=True, indexed=False)
     user_id = db.IntegerProperty()
-    reply = db.StringProperty()
+    reply = db.StringProperty(multiline=True, indexed=False)
     reply_id = db.IntegerProperty()
 
     def __repr__(self):
