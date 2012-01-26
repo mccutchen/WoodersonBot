@@ -1,4 +1,4 @@
 cron:
-- description: conversate
-  url: /cron/socialize
-  schedule: every 1 hours
+# - description: conversate
+#   url: /cron/socialize
+#   schedule: every 1 hours
